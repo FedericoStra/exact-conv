@@ -30,7 +30,7 @@ macro_rules! float_to_int {
             type Error = ExactError;
             fn exact_from(value: $F) -> Result<$U, Self::Error> {
                 let min: $F = 0 as $F;
-                let max: $F = (2 as $F).powi(2i32.pow($n));
+                let max: $F = (2 as $F).powi($n);
                 if min <= value && value < max {
                     if value.trunc() == value {
                         Ok(value as $U)
@@ -45,7 +45,7 @@ macro_rules! float_to_int {
         impl ExactFrom<$F> for $S {
             type Error = ExactError;
             fn exact_from(value: $F) -> Result<$S, Self::Error> {
-                let max: $F = (2 as $F).powi(2i32.pow($n) - 1);
+                let max: $F = (2 as $F).powi($n - 1);
                 let min: $F = -max;
                 if min <= value && value < max {
                     if value.trunc() == value {
@@ -65,8 +65,7 @@ float_to_int!(f32, f64 => 8: u8, i8);
 float_to_int!(f32, f64 => 16: u16, i16);
 float_to_int!(f32, f64 => 32: u32, i32);
 float_to_int!(f32, f64 => 64: u64, i64);
-float_to_int!(f64 => 128: u128, i128);
-// float_to_int!(f32 => 128: u128, i128);
+float_to_int!(f32, f64 => 128: u128, i128);
 
 #[cfg(target_pointer_width = "16")]
 float_to_int!(f32, f64 => 16: usize, isize);
@@ -93,6 +92,11 @@ mod tests {
         assert_eq!(
             <i8 as ExactFrom<f32>>::exact_from(3.14f32),
             Err(ExactError::Inexact)
+        );
+        assert_eq!(i128::exact_from(f32::INFINITY), Err(ExactError::Inexact));
+        assert_eq!(
+            i128::exact_from(f32::NEG_INFINITY),
+            Err(ExactError::Overflow)
         );
     }
 }
