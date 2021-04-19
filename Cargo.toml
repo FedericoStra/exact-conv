@@ -1,6 +1,6 @@
 [package]
 name = "exact-conv"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Federico Stra <stra.federico@gmail.com>"]
 description = "Exact conversions between integer and floating point types."
 license = "MIT"
