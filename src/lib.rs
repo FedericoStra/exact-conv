@@ -81,21 +81,225 @@ mod tests {
     use super::*;
 
     #[test]
-    fn exact() {
-        assert_eq!((3.0f32).exact_into(), Ok(3i8));
-        assert_eq!((-128.0f32).exact_into(), Ok(-128i8));
-        assert_eq!((127.0f32).exact_into(), Ok(127i8));
+    fn f32_to_unsigned() {
+        assert_eq!(0_f32.exact_into(), Ok(0_u8));
+        assert_eq!(0_f32.exact_into(), Ok(0_u16));
+        assert_eq!(0_f32.exact_into(), Ok(0_u32));
+        assert_eq!(0_f32.exact_into(), Ok(0_u64));
+        assert_eq!(0_f32.exact_into(), Ok(0_u128));
+
+        assert_eq!(255_f32.exact_into(), Ok(u8::MAX));
+        assert_eq!(65535_f32.exact_into(), Ok(u16::MAX));
+        assert_eq!(4294967040_f32.exact_into(), Ok(4294967040_u32));
+        assert_eq!(
+            18446742974197923840_f32.exact_into(),
+            Ok(18446742974197923840_u64)
+        );
+        assert_eq!(
+            340282346638528859811704183484516925440_f32.exact_into(),
+            Ok(340282346638528859811704183484516925440_u128)
+        );
+    }
+
+    #[test]
+    fn f32_to_signed() {
+        assert_eq!((-128_f32).exact_into(), Ok(i8::MIN));
+        assert_eq!((-32768_f32).exact_into(), Ok(i16::MIN));
+        assert_eq!((-2147483648_f32).exact_into(), Ok(-2147483648_i32));
+        assert_eq!(
+            (-9223372036854775808_f32).exact_into(),
+            Ok(-9223372036854775808_i64)
+        );
+        assert_eq!(
+            (-170141183460469231731687303715884105728_f32).exact_into(),
+            Ok(-170141183460469231731687303715884105728_i128)
+        );
+
+        assert_eq!(127_f32.exact_into(), Ok(i8::MAX));
+        assert_eq!(32767_f32.exact_into(), Ok(i16::MAX));
+        assert_eq!(2147483520_f32.exact_into(), Ok(2147483520_i32));
+        assert_eq!(
+            9223371487098961920_f32.exact_into(),
+            Ok(9223371487098961920_i64)
+        );
+        assert_eq!(
+            170141173319264429905852091742258462720_f32.exact_into(),
+            Ok(170141173319264429905852091742258462720_i128)
+        );
+    }
+
+    #[test]
+    fn f64_to_unsigned() {
+        assert_eq!(0_f64.exact_into(), Ok(0_u8));
+        assert_eq!(0_f64.exact_into(), Ok(0_u16));
+        assert_eq!(0_f64.exact_into(), Ok(0_u32));
+        assert_eq!(0_f64.exact_into(), Ok(0_u64));
+        assert_eq!(0_f64.exact_into(), Ok(0_u128));
+
+        assert_eq!(255_f64.exact_into(), Ok(u8::MAX));
+        assert_eq!(65535_f64.exact_into(), Ok(u16::MAX));
+        assert_eq!(4294967295_f64.exact_into(), Ok(u32::MAX));
+        assert_eq!(
+            18446744073709549568_f64.exact_into(),
+            Ok(18446744073709549568_u64)
+        );
+        assert_eq!(
+            340282366920938425684442744474606501888_f64.exact_into(),
+            Ok(340282366920938425684442744474606501888_u128)
+        );
+    }
+
+    #[test]
+    fn f64_to_signed() {
+        assert_eq!((-128_f64).exact_into(), Ok(i8::MIN));
+        assert_eq!((-32768_f64).exact_into(), Ok(i16::MIN));
+        assert_eq!((-2147483648_f64).exact_into(), Ok(i32::MIN));
+        assert_eq!(
+            (-9223372036854775808_f64).exact_into(),
+            Ok(-9223372036854775808_i64)
+        );
+        assert_eq!(
+            (-170141183460469231731687303715884105728_f64).exact_into(),
+            Ok(-170141183460469231731687303715884105728_i128)
+        );
+
+        assert_eq!(127_f64.exact_into(), Ok(i8::MAX));
+        assert_eq!(32767_f64.exact_into(), Ok(i16::MAX));
+        assert_eq!(2147483647_f64.exact_into(), Ok(i32::MAX));
+        assert_eq!(
+            9223372036854774784_f64.exact_into(),
+            Ok(9223372036854774784_i64)
+        );
+        assert_eq!(
+            170141183460469212842221372237303250944_f64.exact_into(),
+            Ok(170141183460469212842221372237303250944_i128)
+        );
     }
 
     #[test]
     fn inexact() {
+        assert_eq!(i8::exact_from(3.14_f32), Err(ExactError::Inexact));
+    }
+
+    #[test]
+    fn f32_to_unsigned_overflow() {
+        assert_eq!(u8::exact_from(-1_f32), Err(ExactError::Overflow));
+        assert_eq!(u16::exact_from(-1_f32), Err(ExactError::Overflow));
+        assert_eq!(u32::exact_from(-1_f32), Err(ExactError::Overflow));
+        assert_eq!(u64::exact_from(-1_f32), Err(ExactError::Overflow));
+        assert_eq!(u128::exact_from(-1_f32), Err(ExactError::Overflow));
+
+        assert_eq!(u8::exact_from((2_f32).powi(8)), Err(ExactError::Overflow));
+        assert_eq!(u16::exact_from((2_f32).powi(16)), Err(ExactError::Overflow));
+        assert_eq!(u32::exact_from((2_f32).powi(32)), Err(ExactError::Overflow));
+        assert_eq!(u64::exact_from((2_f32).powi(64)), Err(ExactError::Overflow));
         assert_eq!(
-            <i8 as ExactFrom<f32>>::exact_from(3.14f32),
-            Err(ExactError::Inexact)
+            u128::exact_from((2_f32).powi(128)),
+            Err(ExactError::Overflow)
         );
-        assert_eq!(i128::exact_from(f32::INFINITY), Err(ExactError::Inexact));
+    }
+
+    #[test]
+    fn f32_to_signed_overflow() {
         assert_eq!(
-            i128::exact_from(f32::NEG_INFINITY),
+            i8::exact_from(-(2_f32).powi(8 - 1) - 1_f32),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i16::exact_from(-(2_f32).powi(16 - 1) - 1_f32),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(i32::exact_from(-2147483904_f32), Err(ExactError::Overflow));
+        assert_eq!(
+            i64::exact_from(-9223373136366403584_f32),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i128::exact_from(-170141203742878835383357727663135391744_f32),
+            Err(ExactError::Overflow)
+        );
+
+        assert_eq!(
+            i8::exact_from((2_f32).powi(8 - 1)),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i16::exact_from((2_f32).powi(16 - 1)),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i32::exact_from((2_f32).powi(32 - 1)),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i64::exact_from((2_f32).powi(64 - 1)),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i128::exact_from((2_f32).powi(128 - 1)),
+            Err(ExactError::Overflow)
+        );
+    }
+
+    #[test]
+    fn f64_to_unsigned_overflow() {
+        assert_eq!(u8::exact_from(-1_f64), Err(ExactError::Overflow));
+        assert_eq!(u16::exact_from(-1_f64), Err(ExactError::Overflow));
+        assert_eq!(u32::exact_from(-1_f64), Err(ExactError::Overflow));
+        assert_eq!(u64::exact_from(-1_f64), Err(ExactError::Overflow));
+        assert_eq!(u128::exact_from(-1_f64), Err(ExactError::Overflow));
+
+        assert_eq!(u8::exact_from((2_f64).powi(8)), Err(ExactError::Overflow));
+        assert_eq!(u16::exact_from((2_f64).powi(16)), Err(ExactError::Overflow));
+        assert_eq!(u32::exact_from((2_f64).powi(32)), Err(ExactError::Overflow));
+        assert_eq!(u64::exact_from((2_f64).powi(64)), Err(ExactError::Overflow));
+        assert_eq!(
+            u128::exact_from((2_f64).powi(128)),
+            Err(ExactError::Overflow)
+        );
+    }
+
+    #[test]
+    fn f64_to_signed_overflow() {
+        assert_eq!(
+            i8::exact_from(-(2_f64).powi(8 - 1) - 1_f64),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i16::exact_from(-(2_f64).powi(16 - 1) - 1_f64),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i32::exact_from(-(2_f64).powi(32 - 1) - 1_f64),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i64::exact_from(-9223372036854777856_f64),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i128::exact_from(-170141183460469269510619166673045815296_f64),
+            Err(ExactError::Overflow)
+        );
+
+        assert_eq!(
+            i8::exact_from((2_f64).powi(8 - 1)),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i16::exact_from((2_f64).powi(16 - 1)),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i32::exact_from((2_f64).powi(32 - 1)),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i64::exact_from((2_f64).powi(64 - 1)),
+            Err(ExactError::Overflow)
+        );
+        assert_eq!(
+            i128::exact_from((2_f64).powi(128 - 1)),
             Err(ExactError::Overflow)
         );
     }
