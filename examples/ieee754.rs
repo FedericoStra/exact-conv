@@ -1,4 +1,34 @@
+#![feature(int_bits_const)]
+
 use exact_conv::*;
+
+macro_rules! float_to_unsigned_int_limits {
+    ($F:ty => $U:ty) => {
+        let min: $F = 0 as $F;
+        let max: $F = (2 as $F).powi(<$U>::BITS as i32);
+        println!(
+            "f{} => u{:<4}: [{:.0?},{:.0?})",
+            <$F>::BITS,
+            <$U>::BITS,
+            min,
+            max
+        );
+    };
+}
+
+macro_rules! float_to_signed_int_limits {
+    ($F:ty => $S:ty) => {
+        let max: $F = (2 as $F).powi(<$S>::BITS as i32 - 1);
+        let min: $F = -max;
+        println!(
+            "f{} => i{:<4}: [{:.0?},{:.0?})",
+            <$F>::BITS,
+            <$S>::BITS,
+            min,
+            max
+        );
+    };
+}
 
 fn main() {
     println!(
@@ -20,4 +50,20 @@ fn main() {
     );
     println!("EXP_MASK = {:064b}", f64::EXP_MASK);
     println!("SIG_MASK = {:064b}", f64::SIG_MASK);
+
+    println!();
+    println!("Ranges float -> int");
+    println!();
+
+    float_to_unsigned_int_limits!(f32 => u8);
+    float_to_unsigned_int_limits!(f32 => u16);
+    float_to_unsigned_int_limits!(f32 => u32);
+    float_to_unsigned_int_limits!(f32 => u64);
+    float_to_unsigned_int_limits!(f32 => u128);
+
+    float_to_signed_int_limits!(f32 => i8);
+    float_to_signed_int_limits!(f32 => i16);
+    float_to_signed_int_limits!(f32 => i32);
+    float_to_signed_int_limits!(f32 => i64);
+    float_to_signed_int_limits!(f32 => i128);
 }
